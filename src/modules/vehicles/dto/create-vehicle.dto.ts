@@ -14,11 +14,11 @@ export class CreateVehicleDto {
   @IsString()
   plateNumber!: string;
 
-  @IsOptional()
   @IsString()
-  vin?: string;
+  @IsOptional()
+  vin?: string | null;
 
-  @IsOptional()
   @IsString()
-  color?: string;
+  @IsOptional()
+  color?: string | null;
 }

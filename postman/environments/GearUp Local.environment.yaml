@@ -1,0 +1,23 @@
+name: GearUp Local
+values:
+  - key: base_url
+    value: 'http://localhost:3000'
+    enabled: true
+
+  - key: email
+    value: 'jesse.test@example.com'
+    enabled: true
+
+  - key: password
+    value: 'TestPassword123!'
+    enabled: true
+    type: secret
+
+  - key: accessToken
+    value: ''
+    enabled: true
+    type: secret
+
+  - key: vehicleId
+    value: '4ae48531-795e-412d-87c4-7a9fc88a6448'
+    enabled: true

@@ -1,5 +1,12 @@
-import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
-import { JobStatus } from '../entities/job.entity';
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
+
+import { JobStatus } from '../entities/job.entity.js';
 
 export class UpdateJobDto {
   @IsOptional()

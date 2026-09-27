@@ -18,41 +18,47 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(email: string, password: string) {
-    const user = await this.usersRepository.findOne({
-      where: { email },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
-
-    const passwordMatches = await bcrypt.compare(
-      password,
-      user.password,
+ async login(email: string, password: string) {
+  if (!email || !password) {
+    throw new UnauthorizedException(
+      'Email and password are required',
     );
-
-    if (!passwordMatches) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
-
-    const payload = {
-      userId: user.id,
-      email: user.email,
-    };
-
-    const accessToken = await this.jwtService.signAsync(payload);
-
-    return {
-      accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        phone: user.phone,
-        isActive: user.isActive,
-      },
-    };
   }
+
+  const user = await this.usersRepository.findOne({
+    where: { email },
+  });
+
+  if (!user) {
+    throw new UnauthorizedException('Invalid email or password');
+  }
+
+  const passwordMatches = await bcrypt.compare(
+    password,
+    user.password,
+  );
+
+  if (!passwordMatches) {
+    throw new UnauthorizedException('Invalid email or password');
+  }
+
+  const payload = {
+    userId: user.id,
+    email: user.email,
+  };
+
+  const accessToken = await this.jwtService.signAsync(payload);
+
+  return {
+    accessToken,
+    user: {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      isActive: user.isActive,
+    },
+  };
+}
 }
