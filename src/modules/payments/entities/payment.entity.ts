@@ -29,45 +29,39 @@ export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  amount!: number;
+@Column({ type: 'decimal', precision: 10, scale: 2 })
+amount!: number;
 
-  @Column({
-    type: 'enum',
-    enum: PaymentStatus,
-    default: PaymentStatus.PENDING,
-  })
-  status!: PaymentStatus;
+@Column({
+  type: 'enum',
+  enum: PaymentStatus,
+  default: PaymentStatus.PENDING,
+})
+status!: PaymentStatus;
 
-  @Column({
-    type: 'enum',
-    enum: PaymentMethod,
-  })
-  method!: PaymentMethod;
+@Column({
+  type: 'enum',
+  enum: PaymentMethod,
+})
+method!: PaymentMethod;
 
-  @Column({ nullable: true })
-  reference!: string; // transaction reference from payment gateway
+@Column({ type: 'text', nullable: true })
+reference!: string | null;
 
-  @Column({ nullable: true })
-  notes!: string;
+@Column({ type: 'text', nullable: true })
+notes!: string | null;
 
-  @Column()
-  userId!: string;
+@Column()
+userId!: string;
 
-  @Column({ nullable: true })
-  jobId!: string;
+@Column({ type: 'uuid', nullable: true })
+jobId!: string | null;
 
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'userId' })
-  user!: User;
+@ManyToOne(() => User)
+@JoinColumn({ name: 'userId' })
+user!: User;
 
-  @ManyToOne(() => Job, { nullable: true })
-  @JoinColumn({ name: 'jobId' })
-  job!: Job;
-
-  @CreateDateColumn()
-  createdAt!: Date;
-
-  @UpdateDateColumn()
-  updatedAt!: Date;
+@ManyToOne(() => Job, { nullable: true })
+@JoinColumn({ name: 'jobId' })
+job!: Job | null;
 }

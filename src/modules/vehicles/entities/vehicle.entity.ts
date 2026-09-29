@@ -26,10 +26,10 @@ export class Vehicle {
   @Column({ unique: true })
   plateNumber!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   vin!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   color!: string;
 
   @Column()

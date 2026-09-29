@@ -1,7 +1,7 @@
 $kind: http-request
 order: 1000
 method: POST
-url: '{{base_url}}/jobs'
+url: '{{base_url}}/payments'
 
 auth:
   type: bearer
@@ -17,24 +17,24 @@ body:
   type: json
   content: |-
     {
-      "title": "Brake inspection",
-      "description": "Check front and rear brakes",
-      "vehicleId": "{{vehicleId}}",
-      "estimatedCost": 850
+      "amount": 850,
+      "method": "mobile_money",
+      "jobId": "{{jobId}}",
+      "notes": "Payment for brake inspection"
     }
 
-    scripts:
+scripts:
   - type: afterResponse
     language: text/javascript
     code: |-
       const json = pm.response.json();
 
       if (json.id) {
-        pm.environment.set('jobId', json.id);
-        console.log('✅ jobId saved:', json.id);
+        pm.environment.set('paymentId', json.id);
+        console.log('✅ paymentId saved:', json.id);
       } else {
         console.error(
-          '❌ Job creation failed – no id in response:',
+          '❌ Payment creation failed – no id in response:',
           JSON.stringify(json)
         );
       }

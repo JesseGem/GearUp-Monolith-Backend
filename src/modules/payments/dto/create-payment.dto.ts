@@ -1,5 +1,13 @@
-import { IsNumber, IsEnum, IsOptional, IsString, IsUUID, Min } from 'class-validator';
-import { PaymentMethod } from '../entities/payment.entity';
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
+
+import { PaymentMethod } from '../entities/payment.entity.js';
 
 export class CreatePaymentDto {
   @IsNumber()
@@ -12,6 +20,10 @@ export class CreatePaymentDto {
   @IsOptional()
   @IsUUID()
   jobId?: string;
+
+  @IsOptional()
+  @IsString()
+  reference?: string;
 
   @IsOptional()
   @IsString()

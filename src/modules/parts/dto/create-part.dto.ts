@@ -4,9 +4,8 @@ export class CreatePartDto {
   @IsString()
   name!: string;
 
-  @IsOptional()
   @IsString()
-  description?: string;
+  description!: string;
 
   @IsNumber()
   @Min(0)

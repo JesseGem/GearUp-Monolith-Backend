@@ -1,7 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 import { Review } from './entities/review.entity.js';
+import { Job } from '../jobs/entities/job.entity.js';
+
 import { CreateReviewDto } from './dto/create-review.dto.js';
 import { UpdateReviewDto } from './dto/update-review.dto.js';
 
@@ -10,13 +17,35 @@ export class ReviewsService {
   constructor(
     @InjectRepository(Review)
     private readonly reviewsRepository: Repository<Review>,
+
+    @InjectRepository(Job)
+    private readonly jobsRepository: Repository<Job>,
   ) {}
 
-  async create(userId: string, createReviewDto: CreateReviewDto): Promise<Review> {
-    const review = this.reviewsRepository.create({
-      ...createReviewDto,
-      userId,
+  async create(
+    userId: string,
+    createReviewDto: CreateReviewDto,
+  ): Promise<Review> {
+    const job = await this.jobsRepository.findOne({
+      where: {
+        id: createReviewDto.jobId,
+        userId,
+      },
     });
+
+    if (!job) {
+      throw new NotFoundException(
+        'Job not found or does not belong to this user',
+      );
+    }
+
+    const review = new Review();
+
+    review.rating = createReviewDto.rating;
+    review.comment = createReviewDto.comment ?? '';
+    review.jobId = job.id;
+    review.userId = userId;
+
     return this.reviewsRepository.save(review);
   }
 
@@ -36,7 +65,10 @@ export class ReviewsService {
     });
   }
 
-  async findOne(id: string, userId: string): Promise<Review> {
+  async findOne(
+    id: string,
+    userId: string,
+  ): Promise<Review> {
     const review = await this.reviewsRepository.findOne({
       where: { id, userId },
       relations: { job: true },
@@ -55,14 +87,25 @@ export class ReviewsService {
     updateReviewDto: UpdateReviewDto,
   ): Promise<Review> {
     const review = await this.findOne(id, userId);
+
     Object.assign(review, updateReviewDto);
+
     return this.reviewsRepository.save(review);
   }
 
-  async remove(id: string, userId: string): Promise<void> {
-    const result = await this.reviewsRepository.delete({ id, userId });
+  async remove(
+    id: string,
+    userId: string,
+  ): Promise<void> {
+    const result = await this.reviewsRepository.delete({
+      id,
+      userId,
+    });
+
     if (result.affected === 0) {
-      throw new NotFoundException(`Review #${id} not found`);
+      throw new NotFoundException(
+        `Review #${id} not found`,
+      );
     }
   }
 }

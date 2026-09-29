@@ -14,8 +14,8 @@ export class Part {
   @Column()
   name!: string;
 
-  @Column({ nullable: true })
-  description!: string;
+  @Column({ type: 'text', nullable: true })
+  description!: string | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price!: number;
@@ -23,11 +23,11 @@ export class Part {
   @Column({ default: 0 })
   stock!: number;
 
-  @Column({ nullable: true })
-  brand!: string;
+  @Column({ type: 'text', nullable: true })
+  brand!: string | null;
 
-  @Column({ nullable: true })
-  partNumber!: string; // manufacturer part number
+  @Column({ type: 'text', nullable: true })
+  partNumber!: string | null;
 
   @CreateDateColumn()
   createdAt!: Date;
