@@ -17,6 +17,7 @@ import { UpdateVehicleDto } from './dto/update-vehicle.dto.js';
 
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 
 @Controller('vehicles')
 @UseGuards(JwtAuthGuard)
@@ -27,7 +28,7 @@ export class VehiclesController {
 
   @Post()
   create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
     @Body() createVehicleDto: CreateVehicleDto,
   ) {
     return this.vehiclesService.create(
@@ -37,7 +38,7 @@ export class VehiclesController {
   }
 
   @Get()
-  findAll(@CurrentUser() user: any) {
+  findAll(@CurrentUser() user: AuthenticatedUser) {
     return this.vehiclesService.findAllByUser(
       user.userId,
     );
@@ -46,7 +47,7 @@ export class VehiclesController {
   @Get(':id')
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.vehiclesService.findOne(
       id,
@@ -57,7 +58,7 @@ export class VehiclesController {
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
     @Body() updateVehicleDto: UpdateVehicleDto,
   ) {
     return this.vehiclesService.update(
@@ -70,7 +71,7 @@ export class VehiclesController {
   @Delete(':id')
   remove(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.vehiclesService.remove(
       id,

@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -13,24 +12,31 @@ import { User } from '../users/entities/user.entity.js';
   imports: [
     TypeOrmModule.forFeature([User]),
 
-    PassportModule.register({
-      defaultStrategy: 'jwt',
-    }),
-
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret:
-          configService.get<string>('JWT_SECRET') ??
-          'change-me-in-production',
-        signOptions: {
-          expiresIn: '1d',
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const jwtSecret =
+          configService.get<string>('JWT_SECRET');
+
+        if (!jwtSecret) {
+          throw new Error(
+            'JWT_SECRET is not configured in the environment',
+          );
+        }
+
+        return {
+          secret: jwtSecret,
+          signOptions: {
+            expiresIn: '1d',
+          },
+        };
+      },
     }),
   ],
 
-  controllers: [AuthController],
+  controllers: [
+    AuthController,
+  ],
 
   providers: [
     AuthService,
@@ -38,7 +44,6 @@ import { User } from '../users/entities/user.entity.js';
   ],
 
   exports: [
-    PassportModule,
     JwtModule,
     AuthService,
   ],

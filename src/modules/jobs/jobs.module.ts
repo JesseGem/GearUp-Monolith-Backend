@@ -9,11 +9,7 @@ import { Vehicle } from '../vehicles/entities/vehicle.entity.js';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Job, Vehicle]),
-
-    PassportModule.register({
-      defaultStrategy: 'jwt',
-    }),
+    TypeOrmModule.forFeature([Job, Vehicle]), 
   ],
   controllers: [JobsController],
   providers: [JobsService],

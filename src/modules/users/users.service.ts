@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,11 +20,38 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
   ) {}
 
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+  private toSafeUser(user: User) {
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
+  async findAll() {
+    const users = await this.usersRepository.find();
+
+    return users.map((user) => this.toSafeUser(user));
   }
 
   async create(createUserDto: CreateUserDto) {
+    const existingUser = await this.usersRepository.findOne({
+      where: {
+        email: createUserDto.email,
+      },
+    });
+
+    if (existingUser) {
+      throw new ConflictException(
+        'A user with this email already exists',
+      );
+    }
+
     const hashedPassword = await bcrypt.hash(
       createUserDto.password,
       10,
@@ -39,16 +67,7 @@ export class UsersService {
 
     const savedUser = await this.usersRepository.save(user);
 
-    return {
-      id: savedUser.id,
-      email: savedUser.email,
-      firstName: savedUser.firstName,
-      lastName: savedUser.lastName,
-      phone: savedUser.phone,
-      isActive: savedUser.isActive,
-      createdAt: savedUser.createdAt,
-      updatedAt: savedUser.updatedAt,
-    };
+    return this.toSafeUser(savedUser);
   }
 
   async update(
@@ -64,6 +83,18 @@ export class UsersService {
     }
 
     if (updateUserDto.email !== undefined) {
+      const existingUser = await this.usersRepository.findOne({
+        where: {
+          email: updateUserDto.email,
+        },
+      });
+
+      if (existingUser && existingUser.id !== id) {
+        throw new ConflictException(
+          'A user with this email already exists',
+        );
+      }
+
       user.email = updateUserDto.email;
     }
 
@@ -81,15 +112,6 @@ export class UsersService {
 
     const savedUser = await this.usersRepository.save(user);
 
-    return {
-      id: savedUser.id,
-      email: savedUser.email,
-      firstName: savedUser.firstName,
-      lastName: savedUser.lastName,
-      phone: savedUser.phone,
-      isActive: savedUser.isActive,
-      createdAt: savedUser.createdAt,
-      updatedAt: savedUser.updatedAt,
-    };
+    return this.toSafeUser(savedUser);
   }
 }

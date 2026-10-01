@@ -16,6 +16,7 @@ import { UpdateJobDto } from './dto/update-job.dto.js';
 
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 
 @Controller('jobs')
 @UseGuards(JwtAuthGuard)
@@ -26,7 +27,7 @@ export class JobsController {
 
   @Post()
   create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
     @Body() createJobDto: CreateJobDto,
   ) {
     return this.jobsService.create(
@@ -36,14 +37,14 @@ export class JobsController {
   }
 
   @Get()
-  findAll(@CurrentUser() user: any) {
+  findAll(@CurrentUser() user: AuthenticatedUser) {
     return this.jobsService.findAllByUser(user.userId);
   }
 
   @Get(':id')
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.jobsService.findOne(
       id,
@@ -54,7 +55,7 @@ export class JobsController {
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
     @Body() updateJobDto: UpdateJobDto,
   ) {
     return this.jobsService.update(
@@ -67,7 +68,7 @@ export class JobsController {
   @Delete(':id')
   remove(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.jobsService.remove(
       id,

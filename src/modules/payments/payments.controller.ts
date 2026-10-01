@@ -13,6 +13,7 @@ import { CreatePaymentDto } from './dto/create-payment.dto.js';
 
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 
 @Controller('payments')
 @UseGuards(JwtAuthGuard)
@@ -23,7 +24,7 @@ export class PaymentsController {
 
   @Post()
   create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
     @Body() createPaymentDto: CreatePaymentDto,
   ) {
     return this.paymentsService.create(
@@ -33,7 +34,7 @@ export class PaymentsController {
   }
 
   @Get()
-  findAll(@CurrentUser() user: any) {
+  findAll(@CurrentUser() user: AuthenticatedUser) {
     return this.paymentsService.findAllByUser(
       user.userId,
     );
@@ -42,7 +43,7 @@ export class PaymentsController {
   @Get(':id')
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.paymentsService.findOne(
       id,

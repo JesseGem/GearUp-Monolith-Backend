@@ -4,6 +4,11 @@ import {
   Post,
 } from '@nestjs/common';
 
+import {
+  Throttle,
+  minutes,
+} from '@nestjs/throttler';
+
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 
@@ -13,6 +18,12 @@ export class AuthController {
     private readonly authService: AuthService,
   ) {}
 
+  @Throttle({
+    default: {
+      limit: 5,
+      ttl: minutes(15),
+    },
+  })
   @Post('login')
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(

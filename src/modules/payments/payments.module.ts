@@ -13,10 +13,6 @@ import { Job } from '../jobs/entities/job.entity.js';
       Payment,
       Job,
     ]),
-
-    PassportModule.register({
-      defaultStrategy: 'jwt',
-    }),
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService],

@@ -1,7 +1,9 @@
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -20,6 +22,18 @@ export class VehiclesService {
     userId: string,
     createVehicleDto: CreateVehicleDto,
   ): Promise<Vehicle> {
+    const existingVehicle = await this.vehiclesRepository.findOne({
+      where: {
+        plateNumber: createVehicleDto.plateNumber,
+      },
+    });
+
+    if (existingVehicle) {
+      throw new ConflictException(
+        'A vehicle with this plate number already exists',
+      );
+    }
+
     const vehicle = this.vehiclesRepository.create({
       ...createVehicleDto,
       vin: createVehicleDto.vin ?? undefined,
@@ -65,6 +79,25 @@ export class VehiclesService {
   ): Promise<Vehicle> {
     const vehicle = await this.findOne(id, userId);
 
+    if (updateVehicleDto.plateNumber !== undefined) {
+      const existingVehicle = await this.vehiclesRepository.findOne({
+        where: {
+          plateNumber: updateVehicleDto.plateNumber,
+        },
+      });
+
+      if (
+        existingVehicle &&
+        existingVehicle.id !== id
+      ) {
+        throw new ConflictException(
+          'A vehicle with this plate number already exists',
+        );
+      }
+
+      vehicle.plateNumber = updateVehicleDto.plateNumber;
+    }
+
     if (updateVehicleDto.make !== undefined) {
       vehicle.make = updateVehicleDto.make;
     }
@@ -77,16 +110,12 @@ export class VehiclesService {
       vehicle.year = updateVehicleDto.year;
     }
 
-    if (updateVehicleDto.plateNumber !== undefined) {
-      vehicle.plateNumber = updateVehicleDto.plateNumber;
+    if (updateVehicleDto.vin !== undefined) {
+      vehicle.vin = updateVehicleDto.vin ?? '';
     }
 
-    if (updateVehicleDto.vin !== undefined && updateVehicleDto.vin !== null) {
-      vehicle.vin = updateVehicleDto.vin;
-    }
-
-    if (updateVehicleDto.color !== undefined && updateVehicleDto.color !== null) {
-      vehicle.color = updateVehicleDto.color;
+    if (updateVehicleDto.color !== undefined) {
+      vehicle.color = updateVehicleDto.color ?? '';
     }
 
     return this.vehiclesRepository.save(vehicle);

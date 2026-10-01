@@ -13,10 +13,6 @@ import { Job } from '../jobs/entities/job.entity.js';
       Review,
       Job,
     ]),
-
-    PassportModule.register({
-      defaultStrategy: 'jwt',
-    }),
   ],
   controllers: [ReviewsController],
   providers: [ReviewsService],

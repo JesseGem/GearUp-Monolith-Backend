@@ -9,10 +9,6 @@ import { Vehicle } from './entities/vehicle.entity.js';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Vehicle]),
-
-    PassportModule.register({
-      defaultStrategy: 'jwt',
-    }),
   ],
   controllers: [VehiclesController],
   providers: [VehiclesService],

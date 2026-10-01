@@ -9,10 +9,6 @@ import { User } from './entities/user.entity.js';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
-
-    PassportModule.register({
-      defaultStrategy: 'jwt',
-    }),
   ],
   controllers: [UsersController],
   providers: [UsersService],

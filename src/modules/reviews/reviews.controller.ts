@@ -14,6 +14,7 @@ import { CreateReviewDto } from './dto/create-review.dto.js';
 import { UpdateReviewDto } from './dto/update-review.dto.js';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import { AuthenticatedUser } from '../../common/types/authenticated-user.js';
 
 @Controller('reviews')
 @UseGuards(JwtAuthGuard)
@@ -22,14 +23,14 @@ export class ReviewsController {
 
   @Post()
   create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
     @Body() createReviewDto: CreateReviewDto,
   ) {
     return this.reviewsService.create(user.userId, createReviewDto);
   }
 
   @Get()
-  findAll(@CurrentUser() user: any) {
+  findAll(@CurrentUser() user: AuthenticatedUser) {
     return this.reviewsService.findAllByUser(user.userId);
   }
 
@@ -41,7 +42,7 @@ export class ReviewsController {
   @Get(':id')
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.reviewsService.findOne(id, user.userId);
   }
@@ -49,7 +50,7 @@ export class ReviewsController {
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
     @Body() updateReviewDto: UpdateReviewDto,
   ) {
     return this.reviewsService.update(id, user.userId, updateReviewDto);
@@ -58,7 +59,7 @@ export class ReviewsController {
   @Delete(':id')
   remove(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.reviewsService.remove(id, user.userId);
   }
