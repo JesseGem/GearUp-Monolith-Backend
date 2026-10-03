@@ -1,26 +1,31 @@
-import { CanActivate, ExecutionContext, Global, Injectable, Module } from '@nestjs/common';
-import { PassportModule } from '@nestjs/passport';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+
+import { ROLES_KEY } from '../../common/decorators/roles.decorator.js';
+import { AuthenticatedUser } from '../../common/types/authenticated-user.js';
+import { UserRole } from '../../modules/users/enums/user-role.enum.js';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  canActivate(_context: ExecutionContext): boolean {
-    return true;
+  constructor(private readonly reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    if (!requiredRoles?.length) {
+      return true;
+    }
+
+    const request = context.switchToHttp().getRequest<{
+      user?: AuthenticatedUser;
+    }>();
+
+    return (
+      request.user?.role !== undefined &&
+      requiredRoles.includes(request.user.role)
+    );
   }
 }
-
-@Global()
-@Module({
-  imports: [
-    PassportModule.register({
-      defaultStrategy: 'jwt',
-    }),
-  ],
-  providers: [
-    RolesGuard,
-  ],
-  exports: [
-    PassportModule,
-    RolesGuard,
-  ],
-})
-export class CoreModule {}
