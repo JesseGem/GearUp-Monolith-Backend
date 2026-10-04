@@ -7,8 +7,9 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Job } from '../../jobs/entities/job.entity';
+
+import { User } from '../../users/entities/user.entity.js';
+import { Job } from '../../jobs/entities/job.entity.js';
 
 export enum PaymentStatus {
   PENDING = 'pending',
@@ -29,39 +30,60 @@ export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-@Column({ type: 'decimal', precision: 10, scale: 2 })
-amount!: number;
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+  })
+  amount!: number;
 
-@Column({
-  type: 'enum',
-  enum: PaymentStatus,
-  default: PaymentStatus.PENDING,
-})
-status!: PaymentStatus;
+  @Column({
+    type: 'enum',
+    enum: PaymentStatus,
+    default: PaymentStatus.PENDING,
+  })
+  status!: PaymentStatus;
 
-@Column({
-  type: 'enum',
-  enum: PaymentMethod,
-})
-method!: PaymentMethod;
+  @Column({
+    type: 'enum',
+    enum: PaymentMethod,
+  })
+  method!: PaymentMethod;
 
-@Column({ type: 'text', nullable: true })
-reference!: string | null;
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
+  reference!: string | null;
 
-@Column({ type: 'text', nullable: true })
-notes!: string | null;
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
+  notes!: string | null;
 
-@Column()
-userId!: string;
+  @Column()
+  userId!: string;
 
-@Column({ type: 'uuid', nullable: true })
-jobId!: string | null;
+  @Column({
+    type: 'uuid',
+    nullable: true,
+  })
+  jobId!: string | null;
 
-@ManyToOne(() => User)
-@JoinColumn({ name: 'userId' })
-user!: User;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
+  user!: User;
 
-@ManyToOne(() => Job, { nullable: true })
-@JoinColumn({ name: 'jobId' })
-job!: Job | null;
+  @ManyToOne(() => Job, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'jobId' })
+  job!: Job | null;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }

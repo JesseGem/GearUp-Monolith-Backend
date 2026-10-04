@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,6 +17,7 @@ import { User } from './entities/user.entity.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 
 import { UserRole } from './enums/user-role.enum.js';
 
@@ -52,11 +55,12 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    const user = await this.usersRepository.findOne({
-      where: {
-        id,
-      },
-    });
+    const user =
+      await this.usersRepository.findOne({
+        where: {
+          id,
+        },
+      });
 
     if (!user) {
       throw new NotFoundException(
@@ -187,7 +191,9 @@ export class UsersService {
       );
     }
 
-    if (targetUser.id === requestingUserId) {
+    if (
+      targetUser.id === requestingUserId
+    ) {
       throw new ForbiddenException(
         'You cannot change your own role',
       );
@@ -203,6 +209,130 @@ export class UsersService {
 
     targetUser.role =
       updateUserRoleDto.role;
+
+    const savedUser =
+      await this.usersRepository.save(
+        targetUser,
+      );
+
+    return this.toSafeUser(savedUser);
+  }
+
+  async changePassword(
+    userId: string,
+    changePasswordDto: ChangePasswordDto,
+  ) {
+    const user =
+      await this.usersRepository.findOne({
+        where: {
+          id: userId,
+        },
+      });
+
+    if (!user) {
+      throw new NotFoundException(
+        'User not found',
+      );
+    }
+
+    const currentPasswordMatches =
+      await bcrypt.compare(
+        changePasswordDto.currentPassword,
+        user.password,
+      );
+
+    if (!currentPasswordMatches) {
+      throw new UnauthorizedException(
+        'Current password is incorrect',
+      );
+    }
+
+    if (
+      changePasswordDto.currentPassword ===
+      changePasswordDto.newPassword
+    ) {
+      throw new BadRequestException(
+        'New password must be different from the current password',
+      );
+    }
+
+    user.password =
+      await bcrypt.hash(
+        changePasswordDto.newPassword,
+        10,
+      );
+
+    await this.usersRepository.save(user);
+
+    return {
+      message: 'Password changed successfully',
+    };
+  }
+
+  async deactivate(
+    targetUserId: string,
+    requestingUserId: string,
+  ) {
+    const targetUser =
+      await this.usersRepository.findOne({
+        where: {
+          id: targetUserId,
+        },
+      });
+
+    if (!targetUser) {
+      throw new NotFoundException(
+        'User not found',
+      );
+    }
+
+    if (
+      targetUser.id === requestingUserId
+    ) {
+      throw new ForbiddenException(
+        'You cannot deactivate your own account',
+      );
+    }
+
+    if (!targetUser.isActive) {
+      throw new BadRequestException(
+        'User account is already inactive',
+      );
+    }
+
+    targetUser.isActive = false;
+
+    const savedUser =
+      await this.usersRepository.save(
+        targetUser,
+      );
+
+    return this.toSafeUser(savedUser);
+  }
+
+  async activate(
+    targetUserId: string,
+  ) {
+    const targetUser =
+      await this.usersRepository.findOne({
+        where: {
+          id: targetUserId,
+        },
+      });
+
+    if (!targetUser) {
+      throw new NotFoundException(
+        'User not found',
+      );
+    }
+
+    if (targetUser.isActive) {
+      throw new BadRequestException(
+        'User account is already active',
+      );
+    }
+
+    targetUser.isActive = true;
 
     const savedUser =
       await this.usersRepository.save(

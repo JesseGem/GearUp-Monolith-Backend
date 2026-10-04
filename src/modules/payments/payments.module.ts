@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PassportModule } from '@nestjs/passport';
 
 import { PaymentsController } from './payments.controller.js';
 import { PaymentsService } from './payments.service.js';
+
 import { Payment } from './entities/payment.entity.js';
 import { Job } from '../jobs/entities/job.entity.js';
 

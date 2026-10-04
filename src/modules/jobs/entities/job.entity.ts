@@ -7,8 +7,9 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Vehicle } from '../../vehicles/entities/vehicle.entity';
+
+import { User } from '../../users/entities/user.entity.js';
+import { Vehicle } from '../../vehicles/entities/vehicle.entity.js';
 
 export enum JobStatus {
   PENDING = 'pending',
@@ -25,7 +26,10 @@ export class Job {
   @Column()
   title!: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
   description!: string;
 
   @Column({
@@ -35,17 +39,33 @@ export class Job {
   })
   status!: JobStatus;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
   estimatedCost!: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
   finalCost!: number;
 
   @Column()
-  userId!: string; // the customer
+  userId!: string;
 
   @Column()
   vehicleId!: string;
+
+  @Column({
+    type: 'uuid',
+    nullable: true,
+  })
+  mechanicId!: string | null;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
@@ -54,6 +74,12 @@ export class Job {
   @ManyToOne(() => Vehicle)
   @JoinColumn({ name: 'vehicleId' })
   vehicle!: Vehicle;
+
+  @ManyToOne(() => User, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'mechanicId' })
+  mechanic!: User | null;
 
   @CreateDateColumn()
   createdAt!: Date;

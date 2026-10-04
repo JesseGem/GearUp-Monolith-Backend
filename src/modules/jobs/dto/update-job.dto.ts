@@ -1,33 +1,42 @@
 import {
-  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
   Min,
 } from 'class-validator';
 
-import { JobStatus } from '../entities/job.entity.js';
+import {
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 
 export class UpdateJobDto {
+  @ApiPropertyOptional({
+    example: 'Brake inspection',
+    description:
+      'Updated job title.',
+  })
   @IsOptional()
   @IsString()
   title?: string;
 
+  @ApiPropertyOptional({
+    example:
+      'Inspect front and rear brake components.',
+    description:
+      'Updated service description.',
+  })
   @IsOptional()
   @IsString()
   description?: string;
 
-  @IsOptional()
-  @IsEnum(JobStatus)
-  status?: JobStatus;
-
+  @ApiPropertyOptional({
+    example: 850,
+    description:
+      'Updated estimated service cost.',
+    minimum: 0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
   estimatedCost?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  finalCost?: number;
 }
