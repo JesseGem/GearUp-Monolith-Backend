@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import {
+  ConfigModule,
+  ConfigService,
+} from '@nestjs/config';
 
 import databaseConfig from '../config/database.config.js';
 
@@ -14,17 +17,36 @@ import { Review } from '../modules/reviews/entities/review.entity.js';
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule.forFeature(databaseConfig)],
+      imports: [
+        ConfigModule.forFeature(databaseConfig),
+      ],
+
       inject: [ConfigService],
 
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (
+        configService: ConfigService,
+      ) => ({
         type: 'postgres',
 
-        host: configService.get<string>('database.host'),
-        port: configService.get<number>('database.port'),
-        username: configService.get<string>('database.username'),
-        password: configService.get<string>('database.password'),
-        database: configService.get<string>('database.name'),
+        host: configService.get<string>(
+          'database.host',
+        ),
+
+        port: configService.get<number>(
+          'database.port',
+        ),
+
+        username: configService.get<string>(
+          'database.username',
+        ),
+
+        password: configService.get<string>(
+          'database.password',
+        ),
+
+        database: configService.get<string>(
+          'database.name',
+        ),
 
         entities: [
           User,
@@ -35,7 +57,11 @@ import { Review } from '../modules/reviews/entities/review.entity.js';
           Review,
         ],
 
-        synchronize: true,
+        synchronize:
+          configService.get<string>(
+            'NODE_ENV',
+            'development',
+          ) !== 'production',
       }),
     }),
   ],

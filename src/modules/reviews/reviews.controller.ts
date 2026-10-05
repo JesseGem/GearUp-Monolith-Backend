@@ -24,9 +24,13 @@ import { CreateReviewDto } from './dto/create-review.dto.js';
 import { UpdateReviewDto } from './dto/update-review.dto.js';
 
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../../core/guards/roles.guard.js';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import { Roles } from '../../common/decorators/roles.decorator.js';
+
 import { AuthenticatedUser } from '../../common/types/authenticated-user.js';
+import { UserRole } from '../users/enums/user-role.enum.js';
 
 @ApiTags('Reviews')
 @ApiBearerAuth('access-token')
@@ -38,10 +42,12 @@ export class ReviewsController {
   ) {}
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.CUSTOMER)
   @ApiOperation({
     summary: 'Create a review',
     description:
-      'Create a review for a completed service job. The review is associated with the authenticated user.',
+      'Create one review for a completed job owned by the authenticated customer.',
   })
   @ApiResponse({
     status: 201,
@@ -51,7 +57,7 @@ export class ReviewsController {
   @ApiResponse({
     status: 400,
     description:
-      'Invalid rating, job UUID, or review data.',
+      'Invalid review data.',
   })
   @ApiResponse({
     status: 401,
@@ -59,13 +65,24 @@ export class ReviewsController {
       'Authentication token is missing, invalid, or the account is inactive.',
   })
   @ApiResponse({
+    status: 403,
+    description:
+      'Only customers can create reviews, and the job must be completed.',
+  })
+  @ApiResponse({
     status: 404,
     description:
-      'Job not found or not associated with the authenticated user.',
+      'Job not found or does not belong to the authenticated customer.',
+  })
+  @ApiResponse({
+    status: 409,
+    description:
+      'The customer has already reviewed this job.',
   })
   create(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() createReviewDto: CreateReviewDto,
+    @Body()
+    createReviewDto: CreateReviewDto,
   ) {
     return this.reviewsService.create(
       user.userId,
@@ -77,7 +94,7 @@ export class ReviewsController {
   @ApiOperation({
     summary: 'List my reviews',
     description:
-      'Retrieve reviews created by the currently authenticated user.',
+      'Retrieve reviews created by the authenticated customer.',
   })
   @ApiResponse({
     status: 200,
@@ -101,12 +118,11 @@ export class ReviewsController {
   @ApiOperation({
     summary: 'Get reviews for a job',
     description:
-      'Retrieve reviews associated with a specific job.',
+      'Retrieve reviews for a job. Access is limited to the job owner, the mechanic assigned to the job, or an administrator.',
   })
   @ApiParam({
     name: 'jobId',
-    description:
-      'UUID of the job.',
+    description: 'UUID of the job.',
     example:
       '3bd1fb76-4e44-4350-a7a7-ccb0727442fb',
   })
@@ -125,11 +141,18 @@ export class ReviewsController {
     description:
       'Authentication token is missing, invalid, or the account is inactive.',
   })
+  @ApiResponse({
+    status: 404,
+    description:
+      'Job not found or not accessible to the authenticated user.',
+  })
   findByJob(
     @Param('jobId', ParseUUIDPipe) jobId: string,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.reviewsService.findByJob(
       jobId,
+      user,
     );
   }
 
@@ -137,12 +160,11 @@ export class ReviewsController {
   @ApiOperation({
     summary: 'Get a review',
     description:
-      'Retrieve a specific review created by the authenticated user.',
+      'Retrieve a review created by the authenticated customer.',
   })
   @ApiParam({
     name: 'id',
-    description:
-      'UUID of the review.',
+    description: 'UUID of the review.',
     example:
       '3bd1fb76-4e44-4350-a7a7-ccb0727442fb',
   })
@@ -164,7 +186,7 @@ export class ReviewsController {
   @ApiResponse({
     status: 404,
     description:
-      'Review not found or does not belong to the authenticated user.',
+      'Review not found or does not belong to the authenticated customer.',
   })
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
@@ -177,15 +199,16 @@ export class ReviewsController {
   }
 
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.CUSTOMER)
   @ApiOperation({
     summary: 'Update a review',
     description:
-      'Update the rating or comment of a review created by the authenticated user.',
+      'Update the rating or comment of a review created by the authenticated customer.',
   })
   @ApiParam({
     name: 'id',
-    description:
-      'UUID of the review to update.',
+    description: 'UUID of the review to update.',
     example:
       '3bd1fb76-4e44-4350-a7a7-ccb0727442fb',
   })
@@ -205,14 +228,20 @@ export class ReviewsController {
       'Authentication token is missing, invalid, or the account is inactive.',
   })
   @ApiResponse({
+    status: 403,
+    description:
+      'Only customers can update reviews.',
+  })
+  @ApiResponse({
     status: 404,
     description:
-      'Review not found or does not belong to the authenticated user.',
+      'Review not found or does not belong to the authenticated customer.',
   })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
-    @Body() updateReviewDto: UpdateReviewDto,
+    @Body()
+    updateReviewDto: UpdateReviewDto,
   ) {
     return this.reviewsService.update(
       id,
@@ -222,10 +251,12 @@ export class ReviewsController {
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.CUSTOMER)
   @ApiOperation({
     summary: 'Delete a review',
     description:
-      'Delete a review created by the authenticated user.',
+      'Delete a review created by the authenticated customer.',
   })
   @ApiParam({
     name: 'id',
@@ -250,9 +281,14 @@ export class ReviewsController {
       'Authentication token is missing, invalid, or the account is inactive.',
   })
   @ApiResponse({
+    status: 403,
+    description:
+      'Only customers can delete reviews.',
+  })
+  @ApiResponse({
     status: 404,
     description:
-      'Review not found or does not belong to the authenticated user.',
+      'Review not found or does not belong to the authenticated customer.',
   })
   remove(
     @Param('id', ParseUUIDPipe) id: string,

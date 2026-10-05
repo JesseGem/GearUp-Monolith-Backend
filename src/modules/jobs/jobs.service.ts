@@ -221,25 +221,42 @@ export class JobsService {
     id: string,
     mechanicId: string,
   ): Promise<Job> {
-    const job =
-      await this.jobsRepository.findOne({
-        where: {
+    const result =
+      await this.jobsRepository.update(
+        {
           id,
           status: JobStatus.PENDING,
           mechanicId: IsNull(),
         },
-      });
+        {
+          mechanicId,
+          status: JobStatus.IN_PROGRESS,
+        },
+      );
 
-    if (!job) {
+    if (result.affected !== 1) {
       throw new NotFoundException(
         'Job is not available for acceptance',
       );
     }
 
-    job.mechanicId = mechanicId;
-    job.status = JobStatus.IN_PROGRESS;
+    const job =
+      await this.jobsRepository.findOne({
+        where: {
+          id,
+        },
+        relations: {
+          vehicle: true,
+        },
+      });
 
-    return this.jobsRepository.save(job);
+    if (!job) {
+      throw new NotFoundException(
+        'Job not found after acceptance',
+      );
+    }
+
+    return job;
   }
 
   async complete(
@@ -264,7 +281,9 @@ export class JobsService {
 
     job.finalCost =
       completeJobDto.finalCost;
-    job.status = JobStatus.COMPLETED;
+
+    job.status =
+      JobStatus.COMPLETED;
 
     return this.jobsRepository.save(job);
   }
@@ -296,7 +315,8 @@ export class JobsService {
         );
       }
 
-      job.status = JobStatus.CANCELLED;
+      job.status =
+        JobStatus.CANCELLED;
 
       return this.jobsRepository.save(job);
     }
@@ -308,13 +328,16 @@ export class JobsService {
         );
       }
 
-      if (job.status !== JobStatus.PENDING) {
+      if (
+        job.status !== JobStatus.PENDING
+      ) {
         throw new ForbiddenException(
           'Only pending jobs can be cancelled by the customer',
         );
       }
 
-      job.status = JobStatus.CANCELLED;
+      job.status =
+        JobStatus.CANCELLED;
 
       return this.jobsRepository.save(job);
     }
@@ -336,7 +359,8 @@ export class JobsService {
         );
       }
 
-      job.status = JobStatus.CANCELLED;
+      job.status =
+        JobStatus.CANCELLED;
 
       return this.jobsRepository.save(job);
     }
@@ -364,7 +388,9 @@ export class JobsService {
       );
     }
 
-    if (job.status !== JobStatus.PENDING) {
+    if (
+      job.status !== JobStatus.PENDING
+    ) {
       throw new ForbiddenException(
         'Only pending jobs can be deleted',
       );

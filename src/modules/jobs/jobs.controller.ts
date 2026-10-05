@@ -42,21 +42,22 @@ export class JobsController {
     private readonly jobsService: JobsService,
   ) {}
 
+  // Customer only
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.CUSTOMER)
   @ApiOperation({
     summary: 'Create a service job',
     description:
-      'Create a new vehicle service job for the currently authenticated customer. The selected vehicle must belong to the customer.',
+      'Create a new vehicle service job for the authenticated customer. The selected vehicle must belong to the customer.',
   })
   @ApiResponse({
     status: 201,
-    description:
-      'Service job created successfully.',
+    description: 'Service job created successfully.',
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Invalid job data or vehicle UUID.',
+    description: 'Invalid job data or vehicle UUID.',
   })
   @ApiResponse({
     status: 401,
@@ -64,9 +65,13 @@ export class JobsController {
       'Authentication token is missing, invalid, or the account is inactive.',
   })
   @ApiResponse({
+    status: 403,
+    description: 'Only customers can create jobs.',
+  })
+  @ApiResponse({
     status: 404,
     description:
-      'Vehicle not found or does not belong to the authenticated user.',
+      'Vehicle not found or does not belong to the authenticated customer.',
   })
   create(
     @CurrentUser() user: AuthenticatedUser,
@@ -78,19 +83,18 @@ export class JobsController {
     );
   }
 
-  // Mechanics see unassigned pending jobs
+  // Mechanic only
   @Get('available')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles(UserRole.MECHANIC)
   @ApiOperation({
     summary: 'List available jobs',
     description:
-      'Retrieve pending jobs that have not yet been assigned to a mechanic. Only mechanics can access this endpoint.',
+      'Retrieve pending jobs that have not yet been assigned to a mechanic.',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Available jobs retrieved successfully.',
+    description: 'Available jobs retrieved successfully.',
   })
   @ApiResponse({
     status: 401,
@@ -99,16 +103,15 @@ export class JobsController {
   })
   @ApiResponse({
     status: 403,
-    description:
-      'Authenticated user is not a mechanic.',
+    description: 'Only mechanics can access available jobs.',
   })
   findAvailable() {
     return this.jobsService.findAvailableForMechanics();
   }
 
-  // Customers see their jobs.
-  // Mechanics see their assigned jobs.
-  // Admins see all jobs.
+  // Customer → own jobs
+  // Mechanic → assigned jobs
+  // Admin → all jobs
   @Get()
   @ApiOperation({
     summary: 'List jobs',
@@ -117,8 +120,7 @@ export class JobsController {
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Jobs retrieved successfully.',
+    description: 'Jobs retrieved successfully.',
   })
   @ApiResponse({
     status: 401,
@@ -131,9 +133,9 @@ export class JobsController {
     return this.jobsService.findAll(user);
   }
 
-  // Mechanic accepts a pending job
+  // Mechanic only
   @Patch(':id/accept')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles(UserRole.MECHANIC)
   @ApiOperation({
     summary: 'Accept a job',
@@ -142,20 +144,17 @@ export class JobsController {
   })
   @ApiParam({
     name: 'id',
-    description:
-      'UUID of the job to accept.',
+    description: 'UUID of the job to accept.',
     example:
       '3bd1fb76-4e44-4350-a7a7-ccb0727442fb',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Job accepted successfully.',
+    description: 'Job accepted successfully.',
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Invalid job UUID.',
+    description: 'Invalid job UUID.',
   })
   @ApiResponse({
     status: 401,
@@ -164,8 +163,7 @@ export class JobsController {
   })
   @ApiResponse({
     status: 403,
-    description:
-      'Authenticated user is not a mechanic.',
+    description: 'Only mechanics can accept jobs.',
   })
   @ApiResponse({
     status: 404,
@@ -182,9 +180,9 @@ export class JobsController {
     );
   }
 
-  // Mechanic completes an in-progress job
+  // Mechanic only
   @Patch(':id/complete')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles(UserRole.MECHANIC)
   @ApiOperation({
     summary: 'Complete a job',
@@ -193,15 +191,13 @@ export class JobsController {
   })
   @ApiParam({
     name: 'id',
-    description:
-      'UUID of the job to complete.',
+    description: 'UUID of the job to complete.',
     example:
       '3bd1fb76-4e44-4350-a7a7-ccb0727442fb',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Job completed successfully.',
+    description: 'Job completed successfully.',
   })
   @ApiResponse({
     status: 400,
@@ -215,8 +211,7 @@ export class JobsController {
   })
   @ApiResponse({
     status: 403,
-    description:
-      'Authenticated user is not a mechanic.',
+    description: 'Only mechanics can complete jobs.',
   })
   @ApiResponse({
     status: 404,
@@ -235,9 +230,9 @@ export class JobsController {
     );
   }
 
-  // Customer, mechanic, or admin can cancel
+  // Customer, mechanic, or admin
   @Patch(':id/cancel')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles(
     UserRole.CUSTOMER,
     UserRole.MECHANIC,
@@ -246,19 +241,17 @@ export class JobsController {
   @ApiOperation({
     summary: 'Cancel a job',
     description:
-      "Cancel a job according to the permissions and workflow rules of the authenticated user's role.",
+      "Cancel a job according to the authenticated user's role and the job's current state.",
   })
   @ApiParam({
     name: 'id',
-    description:
-      'UUID of the job to cancel.',
+    description: 'UUID of the job to cancel.',
     example:
       '3bd1fb76-4e44-4350-a7a7-ccb0727442fb',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Job cancelled successfully.',
+    description: 'Job cancelled successfully.',
   })
   @ApiResponse({
     status: 400,
@@ -277,8 +270,7 @@ export class JobsController {
   })
   @ApiResponse({
     status: 404,
-    description:
-      'Job not found.',
+    description: 'Job not found.',
   })
   cancel(
     @Param('id', ParseUUIDPipe) id: string,
@@ -294,24 +286,21 @@ export class JobsController {
   @ApiOperation({
     summary: 'Get a job',
     description:
-      'Retrieve a specific job. Customers can access their own jobs, mechanics can access jobs assigned to them, and administrators can access any job.',
+      'Customers can access their own jobs, mechanics can access jobs assigned to them, and administrators can access any job.',
   })
   @ApiParam({
     name: 'id',
-    description:
-      'UUID of the job.',
+    description: 'UUID of the job.',
     example:
       '3bd1fb76-4e44-4350-a7a7-ccb0727442fb',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Job retrieved successfully.',
+    description: 'Job retrieved successfully.',
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Invalid job UUID.',
+    description: 'Invalid job UUID.',
   })
   @ApiResponse({
     status: 401,
@@ -333,29 +322,28 @@ export class JobsController {
     );
   }
 
-  // Customer edits their pending job
+  // Customer only
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.CUSTOMER)
   @ApiOperation({
     summary: 'Update a pending job',
     description:
-      'Update the title, description, or estimated cost of the authenticated customer’s pending job. Status and final cost are controlled through dedicated workflow endpoints.',
+      'Update the title, description, or estimated cost of the authenticated customer’s pending job.',
   })
   @ApiParam({
     name: 'id',
-    description:
-      'UUID of the job to update.',
+    description: 'UUID of the job to update.',
     example:
       '3bd1fb76-4e44-4350-a7a7-ccb0727442fb',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Job updated successfully.',
+    description: 'Job updated successfully.',
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Invalid UUID or job data.',
+    description: 'Invalid UUID or job data.',
   })
   @ApiResponse({
     status: 401,
@@ -364,13 +352,12 @@ export class JobsController {
   })
   @ApiResponse({
     status: 403,
-    description:
-      'Only pending jobs can be edited.',
+    description: 'Only customers can update jobs.',
   })
   @ApiResponse({
     status: 404,
     description:
-      'Job not found or does not belong to the authenticated user.',
+      'Job not found or does not belong to the authenticated customer.',
   })
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -384,29 +371,28 @@ export class JobsController {
     );
   }
 
-  // Customer deletes their pending job
+  // Customer only
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.CUSTOMER)
   @ApiOperation({
     summary: 'Delete a pending job',
     description:
-      'Delete a pending job belonging to the authenticated customer. Jobs in other states cannot be deleted through this endpoint.',
+      'Delete a pending job belonging to the authenticated customer.',
   })
   @ApiParam({
     name: 'id',
-    description:
-      'UUID of the job to delete.',
+    description: 'UUID of the job to delete.',
     example:
       '3bd1fb76-4e44-4350-a7a7-ccb0727442fb',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Job deleted successfully.',
+    description: 'Job deleted successfully.',
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Invalid job UUID.',
+    description: 'Invalid job UUID.',
   })
   @ApiResponse({
     status: 401,
@@ -415,13 +401,12 @@ export class JobsController {
   })
   @ApiResponse({
     status: 403,
-    description:
-      'Only pending jobs can be deleted.',
+    description: 'Only customers can delete jobs.',
   })
   @ApiResponse({
     status: 404,
     description:
-      'Job not found or does not belong to the authenticated user.',
+      'Job not found or does not belong to the authenticated customer.',
   })
   remove(
     @Param('id', ParseUUIDPipe) id: string,

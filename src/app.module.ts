@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 
+import { AppController } from './app.controller.js';
+import { AppService } from './app.service.js';
 import { CoreModule } from './core/core.module.js';
 import { DatabaseModule } from './database/database.module.js';
 
@@ -46,7 +48,10 @@ import { AuthThrottlerGuard } from './core/guards/auth-throttler.guard.js';
     ReviewsModule,
   ],
 
+  controllers: [AppController],
+
   providers: [
+    AppService,
     {
       provide: APP_GUARD,
       useClass: AuthThrottlerGuard,
